@@ -26,10 +26,10 @@ let mapKeyCodeToAction = (keyCode: int) : action =>
   | _ => DoNothing
   };
 
-let renderCell = (cell: Game.cell) =>
+let renderCell = (cell: Field.cell) =>
   switch (cell) {
-  | EmptyCell => <div className="cell empty-cell" />
-  | NumberedCell(value) =>
+  | None => <div className="cell empty-cell" />
+  | Some(value) =>
     <div className="cell number-cell">
       <span className="number">
         (ReasonReact.string(string_of_int(value)))
@@ -54,8 +54,14 @@ let make = _children => {
     },
   render: self => {
     let field = self.state.game.field.field;
-    <div className="game-grid">
-      (Array.map(renderCell, field) |> ReasonReact.array)
+    let loseMessage =
+      self.state.game.isOver ?
+        <h2> (ReasonReact.string("You lost!")) </h2> : ReasonReact.null;
+    <div>
+      loseMessage
+      <div className="game-grid">
+        (Array.map(renderCell, field) |> ReasonReact.array)
+      </div>
     </div>;
   },
 };

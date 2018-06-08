@@ -1,64 +1,10 @@
-let base = 2;
-
-type cell =
-  | NumberedCell(int)
-  | EmptyCell;
-
-type field = {
-  field: array(cell),
-  size: int,
-};
-
 type game = {
   score: int,
   isOver: bool,
-  field,
+  field: Field.field,
 };
 
-type position = {
-  x: int,
-  y: int,
-};
-
-module Field = {
-  let randomNewTileValue = () => Random.int(100) < 90 ? 2 : 4;
-
-  let makeEmptyField = (size: int) : field => {
-    field: Array.make(size * size, EmptyCell),
-    size,
-  };
-
-  let indexedEmptyCells = (field: field) =>
-    field.field
-    |> Array.to_list
-    |> List.mapi((index, cell) => (index, cell))
-    |> List.filter(((_index, cell)) => cell == EmptyCell);
-
-  let randomEmptyPosition = (field: field) => {
-    let emptyCells: list((int, cell)) = indexedEmptyCells(field);
-    fst @@ List.nth(emptyCells, Random.int(List.length(emptyCells)));
-  };
-
-  let populateRandomCell = (field: field) => {
-    let randomPosition = randomEmptyPosition(field);
-    field.field[randomPosition] = NumberedCell(randomNewTileValue());
-    field;
-  };
-
-  let indexFromPosition = (position: position, fieldSize: int) : int =>
-    position.x * fieldSize + position.y;
-
-  let getCell = (position: position, field: field) : cell => {
-    let index = indexFromPosition(position, field.size);
-    field.field[index];
-  };
-
-  let setCell = (position: position, field: field, value: cell) => {
-    let index = indexFromPosition(position, field.size);
-    field.field[index] = value;
-    ();
-  };
-};
+type fieldIterator = (Field.field, Field.position => unit) => unit;
 
 let startGame = size => {
   score: 0,
@@ -69,24 +15,77 @@ let startGame = size => {
     Field.makeEmptyField(size),
 };
 
-let moveLeft = game => {
-  Js.log("left");
-  game;
-};
+let mergeIfEqualNumber = (field, target, source) =>
+  if (snd(target) == snd(source)) {
+    Field.setCell(fst(target), field, Some(snd(target) * 2));
+    Field.setCell(fst(source), field, None);
+  };
 
-let moveRight = game => {
-  Js.log("right");
-  game;
-};
+let mergePhase = (searchDirection, field, position) =>
+  switch (Field.getCell(position, field)) {
+  | Some(cell) =>
+    switch (Field.nextCellPosition(searchDirection, field, position)) {
+    | Some(nextCell) =>
+      mergeIfEqualNumber(field, (position, cell), nextCell)
+    | None => ()
+    }
+  | None => ()
+  };
+
+let move = (game: game, iterator: fieldIterator, direction) : game =>
+  if (game.isOver) {
+    game;
+  } else {
+    iterator(
+      game.field,
+      mergePhase(Field.oppositeDirection(direction), game.field),
+    );
+    if (Field.hasEmptyCells(game.field)) {
+      let _ = Field.populateRandomCell(game.field);
+      game;
+    } else {
+      {...game, isOver: true};
+    };
+  };
 
 let moveUp = game => {
-  Js.log("up");
-  game;
+  let iterator = (field, process) =>
+    for (x in 0 to Field.(field.size) - 1) {
+      for (y in 0 to Field.(field.size) - 1) {
+        process({Field.x, y});
+      };
+    };
+  move(game, iterator, Up);
 };
 
 let moveDown = game => {
-  Js.log("down");
-  game;
+  let iterator = (field, process) =>
+    for (x in 0 to Field.(field.size) - 1) {
+      for (y in game.field.size - 1 downto 0) {
+        process({Field.x, y});
+      };
+    };
+  move(game, iterator, Down);
+};
+
+let moveLeft = game => {
+  let iterator = (field, process) =>
+    for (y in 0 to Field.(field.size) - 1) {
+      for (x in 0 to Field.(field.size) - 1) {
+        process({Field.x, y});
+      };
+    };
+  move(game, iterator, Left);
+};
+
+let moveRight = game => {
+  let iterator = (field, process) =>
+    for (y in 0 to Field.(field.size) - 1) {
+      for (x in Field.(field.size) - 1 downto 0) {
+        process({Field.x, y});
+      };
+    };
+  move(game, iterator, Right);
 };
 
 Random.init(int_of_float(Js.Date.now()));
