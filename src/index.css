@@ -1,0 +1,31 @@
+body {
+  --field-size: 4;
+  --cell-size: 8em;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.game-grid {
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: repeat(var(--field-size), 1fr);
+  grid-template-columns: repeat(var(--field-size), 1fr);
+  width: calc( var(--field-size) * var(--cell-size));
+  height: calc( var(--field-size) * var(--cell-size));
+  border: 2px solid black;
+}
+
+.cell {
+  box-sizing: border-box;
+  border: 2px solid black;
+  display: grid;
+}
+
+.cell > .number {
+  margin: auto;
+}
+
+.number-cell {
+  background-color: beige;
+}
