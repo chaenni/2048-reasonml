@@ -9,20 +9,17 @@ external addKeyboardEventListener :
 type state = {game: Game.game};
 
 type action =
-  | MoveUp
-  | MoveDown
-  | MoveLeft
-  | MoveRight
+  | Move(Field.direction)
   | DoNothing;
 
 let component = ReasonReact.reducerComponent("Game");
 
 let mapKeyCodeToAction = (keyCode: int) : action =>
   switch (keyCode) {
-  | 37 => MoveLeft
-  | 38 => MoveUp
-  | 39 => MoveRight
-  | 40 => MoveDown
+  | 37 => Move(Left)
+  | 38 => Move(Up)
+  | 39 => Move(Right)
+  | 40 => Move(Down)
   | _ => DoNothing
   };
 
@@ -46,10 +43,8 @@ let make = _children => {
     ),
   reducer: (action, state) =>
     switch (action) {
-    | MoveUp => ReasonReact.Update({game: Game.moveUp(state.game)})
-    | MoveDown => ReasonReact.Update({game: Game.moveDown(state.game)})
-    | MoveLeft => ReasonReact.Update({game: Game.moveLeft(state.game)})
-    | MoveRight => ReasonReact.Update({game: Game.moveRight(state.game)})
+    | Move(direction) =>
+      ReasonReact.Update({game: Game.move(state.game, direction)})
     | DoNothing => ReasonReact.NoUpdate
     },
   render: self => {

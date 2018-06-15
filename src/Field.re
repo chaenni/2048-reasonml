@@ -74,7 +74,7 @@ let getCell = (position: position, field: field) : cell => {
 let setCell = (position: position, field: field, value: cell) => {
   let index = indexFromPosition(position, field.size);
   field.field[index] = value;
-  ();
+  value;
 };
 
 let isInField = ({size}: field, {x, y}: position) =>
@@ -105,3 +105,47 @@ let nextCellPosition =
     field,
     movePosition(direction, position),
   );
+
+module Iterator = {
+  type iterator = (field, position => unit) => unit;
+
+  let rightToLeft: iterator =
+    (field, process) =>
+      for (y in 0 to field.size - 1) {
+        for (x in field.size - 1 downto 0) {
+          process({x, y});
+        };
+      };
+
+  let leftToRight: iterator =
+    (field, process) =>
+      for (y in 0 to field.size - 1) {
+        for (x in 0 to field.size - 1) {
+          process({x, y});
+        };
+      };
+
+  let bottomUp: iterator =
+    (field, process) =>
+      for (x in 0 to field.size - 1) {
+        for (y in field.size - 1 downto 0) {
+          process({x, y});
+        };
+      };
+
+  let topDown: iterator =
+    (field, process) =>
+      for (x in 0 to field.size - 1) {
+        for (y in 0 to field.size - 1) {
+          process({x, y});
+        };
+      };
+
+  let forDirection = (direction: direction) : iterator =>
+    switch (direction) {
+    | Left => leftToRight
+    | Right => rightToLeft
+    | Up => topDown
+    | Down => bottomUp
+    };
+};
