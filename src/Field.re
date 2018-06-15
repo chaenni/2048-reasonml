@@ -1,3 +1,5 @@
+open MaybeMonad;
+
 type position = {
   x: int,
   y: int,
@@ -97,6 +99,27 @@ let rec traverseToNextNumberedCell =
     None;
   };
 
+let rec furthestEmptyPosition =
+        (direction: direction, field: field, position: position) =>
+  if (isInField(field, position)) {
+    switch (getCell(position, field)) {
+    | Some(_) => None
+    | None =>
+      switch (
+        furthestEmptyPosition(
+          direction,
+          field,
+          movePosition(direction, position),
+        )
+      ) {
+      | Some(foundPosition) => return(foundPosition)
+      | None => return(position)
+      }
+    };
+  } else {
+    None;
+  };
+
 let nextCellPosition =
     (direction: direction, field: field, position: position)
     : option(positionedCell) =>
@@ -105,6 +128,10 @@ let nextCellPosition =
     field,
     movePosition(direction, position),
   );
+
+let nextFurthestEmptyPosition =
+    (direction: direction, field: field, position: position) =>
+  furthestEmptyPosition(direction, field, movePosition(direction, position));
 
 module Iterator = {
   type iterator = (field, position => unit) => unit;
